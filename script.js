@@ -61,6 +61,7 @@ function createWatchlistCard(movie) {
 			<div class="movie-info">
 				<h3 class="movie-title">${movie.Title}</h3>
 				<p class="movie-year">${movie.Year}</p>
+				<button class="btn remove-from-watchlist-btn" data-imdb-id="${movie.imdbID}">Remove</button>
 			</div>
 		</article>
 	`;
@@ -150,14 +151,23 @@ searchForm.addEventListener("submit", async (event) => {
 });
 
 
-//function to remove a movie from watchlist
-const removeFromWatchList = (movieID) => {
-  if (watchlist.has(movieID)){
-    watchlist.delete(movieID);
-    saveWatchlist();
-    renderWatchlist();
-  }
-};
+// Remove a movie from the watchlist by IMDb ID.
+function removeFromWatchlist(imdbID) {
+	watchlist = watchlist.filter((movie) => movie.imdbID !== imdbID);
+	saveWatchlist();
+	renderWatchlist();
+}
+
+// Listen for clicks on Remove buttons inside the watchlist.
+watchlistContainer.addEventListener("click", (event) => {
+	const removeButton = event.target.closest(".remove-from-watchlist-btn");
+
+	if (!removeButton) {
+		return;
+	}
+
+	removeFromWatchlist(removeButton.dataset.imdbId);
+});
 
 
 // Initialize the watchlist UI with saved data.
