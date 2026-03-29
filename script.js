@@ -1,5 +1,5 @@
 // OMDb demo API key used for classroom projects.
-const API_KEY = "564727fa";
+const API_KEY = "9ac890b8";
 
 // Get elements from the page.
 const searchForm = document.getElementById("search-form");
