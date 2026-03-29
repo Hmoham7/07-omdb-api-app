@@ -6,6 +6,9 @@ const searchForm = document.getElementById("search-form");
 const movieSearchInput = document.getElementById("movie-search");
 const movieResults = document.getElementById("movie-results");
 const watchlistContainer = document.getElementById("watchlist");
+const movieDetailsModal = document.getElementById("movie-details-modal");
+const modalBody = document.getElementById("modal-body");
+const modalCloseButton = document.getElementById("modal-close-button");
 
 const EMPTY_WATCHLIST_MESSAGE = "Your watchlist is empty. Search for movies to add!";
 const WATCHLIST_STORAGE_KEY = "movieWatchlist";
@@ -43,7 +46,10 @@ function createMovieCard(movie) {
 			<div class="movie-info">
 				<h3 class="movie-title">${movie.Title}</h3>
 				<p class="movie-year">${movie.Year}</p>
-				<button class="btn add-to-watchlist-btn" data-imdb-id="${movie.imdbID}">Add to Watchlist</button>
+				<div class="movie-actions">
+					<button class="btn details-btn" data-imdb-id="${movie.imdbID}">Details</button>
+					<button class="btn add-to-watchlist-btn" data-imdb-id="${movie.imdbID}">Add to Watchlist</button>
+				</div>
 			</div>
 		</article>
 	`;
@@ -61,7 +67,10 @@ function createWatchlistCard(movie) {
 			<div class="movie-info">
 				<h3 class="movie-title">${movie.Title}</h3>
 				<p class="movie-year">${movie.Year}</p>
-				<button class="btn remove-from-watchlist-btn" data-imdb-id="${movie.imdbID}">Remove</button>
+				<div class="movie-actions">
+					<button class="btn details-btn" data-imdb-id="${movie.imdbID}">Details</button>
+					<button class="btn remove-from-watchlist-btn" data-imdb-id="${movie.imdbID}">Remove</button>
+				</div>
 			</div>
 		</article>
 	`;
@@ -73,6 +82,57 @@ async function fetchMovies(searchText) {
 	const response = await fetch(url);
 	const data = await response.json();
 	return data;
+}
+
+// Fetch full movie details from OMDb using IMDb ID.
+async function fetchMovieDetails(imdbID) {
+	const url = `https://www.omdbapi.com/?apikey=${API_KEY}&i=${encodeURIComponent(imdbID)}&plot=full`;
+	const response = await fetch(url);
+	const data = await response.json();
+	return data;
+}
+
+// Build modal content with full movie information.
+function createMovieDetailsContent(movie) {
+	const posterSrc = movie.Poster !== "N/A"
+		? movie.Poster
+		: "https://via.placeholder.com/300x450?text=No+Poster";
+
+	return `
+		<div class="modal-details">
+			<img class="modal-poster" src="${posterSrc}" alt="${movie.Title} poster">
+			<div class="modal-text">
+				<h3 id="modal-movie-title">${movie.Title}</h3>
+				<p><span class="label">Year:</span> ${movie.Year}</p>
+				<p><span class="label">Rating:</span> ${movie.imdbRating}</p>
+				<p><span class="label">Genre:</span> ${movie.Genre}</p>
+				<p><span class="label">Director:</span> ${movie.Director}</p>
+				<p><span class="label">Cast:</span> ${movie.Actors}</p>
+				<p><span class="label">Plot:</span> ${movie.Plot}</p>
+			</div>
+		</div>
+	`;
+}
+
+// Open the modal and load details for one movie.
+async function openMovieDetailsModal(imdbID) {
+	modalBody.innerHTML = "<p>Loading movie details...</p>";
+	movieDetailsModal.classList.remove("hidden");
+	movieDetailsModal.setAttribute("aria-hidden", "false");
+
+	const data = await fetchMovieDetails(imdbID);
+
+	if (data.Response === "True") {
+		modalBody.innerHTML = createMovieDetailsContent(data);
+	} else {
+		modalBody.innerHTML = "<p>Movie details could not be loaded.</p>";
+	}
+}
+
+// Close the details modal.
+function closeMovieDetailsModal() {
+	movieDetailsModal.classList.add("hidden");
+	movieDetailsModal.setAttribute("aria-hidden", "true");
 }
 
 // Show movies in the results grid.
@@ -119,6 +179,13 @@ function renderNoResults(message) {
 
 // Listen for clicks on Add to Watchlist buttons inside search results.
 movieResults.addEventListener("click", (event) => {
+	const detailsButton = event.target.closest(".details-btn");
+
+	if (detailsButton) {
+		openMovieDetailsModal(detailsButton.dataset.imdbId);
+		return;
+	}
+
 	const addButton = event.target.closest(".add-to-watchlist-btn");
 
 	if (!addButton) {
@@ -160,6 +227,13 @@ function removeFromWatchlist(imdbID) {
 
 // Listen for clicks on Remove buttons inside the watchlist.
 watchlistContainer.addEventListener("click", (event) => {
+	const detailsButton = event.target.closest(".details-btn");
+
+	if (detailsButton) {
+		openMovieDetailsModal(detailsButton.dataset.imdbId);
+		return;
+	}
+
 	const removeButton = event.target.closest(".remove-from-watchlist-btn");
 
 	if (!removeButton) {
@@ -167,6 +241,20 @@ watchlistContainer.addEventListener("click", (event) => {
 	}
 
 	removeFromWatchlist(removeButton.dataset.imdbId);
+});
+
+modalCloseButton.addEventListener("click", () => {
+	closeMovieDetailsModal();
+});
+
+movieDetailsModal.addEventListener("click", (event) => {
+	const closeTarget = event.target.closest("[data-close-modal]");
+
+	if (!closeTarget) {
+		return;
+	}
+
+	closeMovieDetailsModal();
 });
 
 

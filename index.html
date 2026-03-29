@@ -46,6 +46,14 @@
     <p>Powered by <a href="https://www.omdbapi.com/" target="_blank">OMDB API</a></p>
   </footer>
 
+  <div id="movie-details-modal" class="modal hidden" aria-hidden="true">
+    <div class="modal-overlay" data-close-modal="true"></div>
+    <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="modal-movie-title">
+      <button id="modal-close-button" class="modal-close-button" type="button" aria-label="Close movie details">&times;</button>
+      <div id="modal-body"></div>
+    </div>
+  </div>
+
   <script src="script.js"></script>
 </body>
 
