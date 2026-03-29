@@ -149,6 +149,17 @@ searchForm.addEventListener("submit", async (event) => {
 	}
 });
 
+
+//function to remove a movie from watchlist
+const removeFromWatchList = (movieID) => {
+  if (watchlist.has(movieID)){
+    watchlist.delete(movieID);
+    saveWatchlist();
+    renderWatchlist();
+  }
+};
+
+
 // Initialize the watchlist UI with saved data.
 loadWatchlist();
 renderWatchlist();
